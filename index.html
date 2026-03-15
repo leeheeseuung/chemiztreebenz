@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChemzLandz: Petualangan Benzena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mario-red: #E52521;
+            --mario-green: #43B047;
+            --mario-blue: #049CD8;
+            --mario-yellow: #FBD000;
+            --rpg-dark: #1a1a2e;
+            --rpg-panel: #2d3436;
+        }
+
+        /* Scanlines Effect */
+        body::after {
+            content: " ";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #27ae60;
+            background-image: radial-gradient(#2ecc71 20%, transparent 20%);
+            background-size: 30px 30px;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            background-color: var(--rpg-panel);
+            width: 95%;
+            max-width: 1500px;
+            height: 85vh;
+            border: 6px solid #000;
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.3);
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: #000;
+            padding: 25px 15px;
+            border-right: 4px solid #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .xp-container {
+            border: 2px solid #fff;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .xp-text {
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .xp-bar-bg {
+            background: #444;
+            height: 12px;
+            width: 100%;
+            position: relative;
+        }
+
+        .xp-bar-fill {
+            background: var(--mario-green);
+            height: 100%;
+            width: 10%;
+            transition: width 0.5s ease;
+            box-shadow: inset -4px 0 0 #27ae60;
+        }
+
+        .logo {
+            font-family: 'Press Start 2P', cursive;
+            color: var(--mario-yellow);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px var(--mario-red);
+            border: 2px dashed #fff;
+            padding: 10px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 2px solid transparent;
+            color: #aaa;
+            padding: 12px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 9px;
+            text-align: left;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-btn:hover {
+            color: #fff;
+            background: #333;
+            border-left: 5px solid var(--mario-yellow);
+        }
+
+        .nav-btn.active {
+            color: var(--mario-yellow);
+            background: #222;
+            border: 2px solid var(--mario-yellow);
+            transform: scale(1.05);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            background-color: var(--rpg-dark);
+            overflow-y: auto;
+            color: #fff;
+        }
+
+        .card {
+            background: #34495e;
+            border: 4px solid #fff;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: #3d566e;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .card::after {
+            content: "CLICK TO VIEW";
+            position: absolute;
+            top: -10px; right: 10px;
+            background: var(--mario-red);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 7px;
+            padding: 4px 8px;
+            border: 1px solid #fff;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .card:hover::after { opacity: 1; }
+
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 18px;
+            color: var(--mario-yellow);
+            margin-bottom: 25px;
+            line-height: 1.6;
+            border-bottom: 3px double #fff;
+            padding-bottom: 10px;
+        }
+
+        .loot-desc {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            font-size: 14px;
+            color: #ddd;
+            margin-top: 0;
+        }
+
+        .card.expanded .loot-desc {
+            max-height: 1000px;
+            margin-top: 15px;
+            border-top: 1px dashed #fff;
+            padding-top: 10px;
+        }
+
+        /* --- SPECTRUM CSS --- */
+        .spectrum-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            color: #000;
+            text-align: center;
+            border: 4px solid #000;
+        }
+        .spectrum-bar {
+            height: 60px;
+            width: 100%;
+            background: linear-gradient(to right, #4b0082, #0000ff, #00ff00, #ffff00, #ff7f00, #ff0000);
+            border: 2px solid #000;
+        }
+        .spectrum-ruler {
+            height: 15px;
+            width: 100%;
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2px;
+        }
+        .tick { width: 2px; height: 10px; background: #000; }
+        .spectrum-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            color: #000;
+        }
+        
+        ```css
+img[src*="giphy"] {
+    animation: jump-anim 0.6s infinite alternate;
+}
+
+@keyframes jump-anim {
+    from { transform: translateY(0); }
+    to { transform: translateY(-20px); }
+}
+
+.mario-track {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    height: 60px;
+    margin: 20px 0;
+}
+
+.mario-walker {
+    width: 40px;
+    image-rendering: pixelated;
+    position: absolute;
+    bottom: 0;
+    animation: walk-across 3s linear infinite;
+    filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.3));
+}
+
+@keyframes walk-across {
+    from { left: -50px; }
+    to { left: 100%; }
+}
+
+.lab-container {
+    background: #222;
+    border: 4px solid #fff;
+    padding: 20px;
+    text-align: center;
+    image-rendering: pixelated;
+}
+
+.color-slots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.slot {
+    width: 50px;
+    height: 50px;
+    border: 3px solid #fff;
+    background: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    color: #fff;
+}
+
+.mixer-result {
+    width: 120px;
+    height: 120px;
+    margin: 20px auto;
+    border: 6px double #fff;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+
+.btn-mix {
+    padding: 10px;
+    border: 3px solid #000;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 8px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.red { background: #ff0000; }
+.green { background: #00ff00; }
+.blue { background: #0000ff; }
+.btn-mix.orange { background: #FFA500; }
+.purple { background: #800080; }
+.pink { background: #FFC0CB; }
+.yellow { background: #FFFF00; }
+.white { background: #FFFFFF; color: #000; }
+
+.color-slots {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.sub-tab-container {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.sub-tab-btn {
+    background: #444;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 8px 12px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 8px;
+    cursor: pointer;
+}
+
+.sub-tab-btn.active {
+    background: #ffff00;
+    color: #000;
+}
+
+.theory-content {
+    background: #222;
+    border: 4px solid #fff;
+    padding: 20px;
+    text-align: left;
+    color: #fff;
+    line-height: 1.6;
+}
+
+.theory-content h4 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    color: #ffff00;
+    margin: 15px 0 10px 0;
+}
+
+.color-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid #fff;
+    font-size: 11px;
+    font-weight: bold;
+    margin: 3px;
+    color: #000;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 6px;
+}
+
+@keyframes blink-gold {
+    0%, 100% { border-color: #FBD000; opacity: 1; }
+    50% { border-color: #fff; opacity: 0.8; }
+}
+
+.boss-blink {
+    animation: blink-gold 0.8s ease-in-out infinite;
+    border: 4px solid #FBD000;
+}
+
+    </style>
+  
+    <script>
+        let selections = [];
+
+function selectColor(hex, name) {
+    if (selections.length < 2) {
+        selections.push({ hex, name });
+        document.getElementById("slot" + selections.length).style.background = hex;
+        document.getElementById("slot" + selections.length).innerText = "";
+        if (selections.length === 2) calculateMix();
+    }
+}
+
+function calculateMix() {
+    const r = document.getElementById("resultBox");
+    const pair = selections.map(c => c.name).sort().join("+");
+    let res = { hex: "#7f8c8d", name: "MYSTERY" };
+
+    const recipes = {
+        "GREEN+RED": { hex: "#ffff00", name: "YELLOW" },
+        "BLUE+RED": { hex: "#ff00ff", name: "MAGENTA" },
+        "BLUE+GREEN": { hex: "#00ffff", name: "CYAN" },
+        "RED+WHITE": { hex: "#ff8080", name: "LIGHT RED" },
+        "BLUE+WHITE": { hex: "#8080ff", name: "LIGHT BLUE" },
+        "GREEN+WHITE": { hex: "#80ff80", name: "LIGHT GREEN" },
+        "BLUE+YELLOW": { hex: "#00ff00", name: "GREEN" },
+        "RED+YELLOW": { hex: "#ffa500", name: "ORANGE" },
+        "BLUE+PURPLE": { hex: "#4b0082", name: "INDIGO" },
+        "PINK+WHITE": { hex: "#fff0f5", name: "WHITE PINK" },
+        "ORANGE+WHITE": { hex: "#FCBE6A", name: "PEACH" },
+        "PURPLE+WHITE": { hex: "#e6e6fa", name: "LAVENDER" },
+        "BLUE+ORANGE": { hex: "#a52a2a", name: "BROWN" },
+        "GREEN+PINK": { hex: "#90ee90", name: "PALE GREEN" },
+        "WHITE+YELLOW": { hex: "#fffcc7", name: "CREAM" },
+        "ORANGE+RED": { hex: "#ff5349", name: "RED ORANGE" },
+        "PURPLE+RED": { hex: "#660033", name: "BURGUNDY" },
+        "PINK+RED": { hex: "#f7879a", name: "ROSE PINK" },
+        "GREEN+YELLOW": { hex: "#9ACD32", name: "CHARTREUSE" },
+        "GREEN+ORANGE": { hex: "#964B00", name: "LIGHT BROWN" },
+        "GREEN+PURPLE": { hex: "#6e6f71", name: "GRAY" },
+        "BLUE+PINK": { hex: "#DB91EF", name: "LILAC" },
+        "ORANGE+YELLOW": { hex: "#ffbf00", name: "AMBER" },
+        "PURPLE+YELLOW": { hex: "#BA7D85", name: "MAUVE" },
+        "PINK+YELLOW": { hex: "#ffe5b4", name: "LIGHT PEACH" },
+        "ORANGE+PURPLE": { hex: "#7F2B0A", name: "REDDISH BROWN" },
+        "ORANGE+PINK": { hex: "#FF7E70", name: "SALMON" },
+        "PINK+PURPLE": { hex: "#B53389", name: "FUCHSIA" }
+    };
+
+    if (selections[0].name === selections[1].name) res = selections[0];
+    else if (recipes[pair]) res = recipes[pair];
+
+    r.style.background = res.hex;
+    r.innerText = res.name;
+    const light = ["YELLOW", "CYAN", "WHITE", "PEACH", "LAVENDER", "PINK", "CREAM", "AMBER", "SALMON"].some(c => res.name.includes(c));
+    r.style.color = light ? "#000" : "#fff";
+}
+
+function resetMixer() {
+    selections = [];
+    ["slot1", "slot2"].forEach(id => {
+        let s = document.getElementById(id);
+        s.style.background = "#444";
+        s.innerText = "?";
+    });
+    let rb = document.getElementById("resultBox");
+    rb.style.background = "#000";
+    rb.innerText = "RESULT";
+    rb.style.color = "#fff";
+}
+
+function showSubTab(tabId, btn) {
+    document.getElementById('lab-section').style.display = 'none';
+    document.getElementById('theory-section').style.display = 'none';
+    
+    let btns = document.getElementsByClassName('sub-tab-btn');
+    for (let b of btns) b.classList.remove('active');
+    
+    document.getElementById(tabId).style.display = 'block';
+    btn.classList.add('active');
+}
+
+    </script>
+</head>
+<body>
+
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">🧀 ChemzLandz 🧀</div>
+            <div class="xp-container">
+                <span class="xp-text">QUEST PROGRESS</span>
+                <div class="xp-bar-bg"><div id="progressBar" class="xp-bar-fill"></div></div>
+            </div>
+            <button class="nav-btn active" onclick="openTab('start', this, 10)">🎮 START</button>
+            <button class="nav-btn" onclick="openTab('level1', this, 20)">🍄 Level 1: Basic</button>
+            <button class="nav-btn" onclick="openTab('level2', this, 30)">📦 Level 2: Drops</button>
+            <button class="nav-btn" onclick="openTab('level3', this, 40)">🎨 Level 3: Paint</button>
+            <button class="nav-btn" onclick="openTab('level4', this, 50)">🌈 Level 4: Spectrum</button>
+            <button class="nav-btn" onclick="openTab('level5', this, 65)">🧪 Level 5: Mixing</button>
+            <button class="nav-btn" onclick="openTab('level6', this, 80)">👀 Level 6: Vision</button>
+            <button class="nav-btn" onclick="openTab('level7', this, 90)">💎 Level 7: Pigments</button>
+            <button class="nav-btn" onclick="openTab('level8', this, 100)">⭐ Boss: FunFact</button>
+        </aside>
+
+        <main class="content-area">
+            
+            <div id="start" class="tab-content active">
+                <h1>Welcome, Voyager! 👩🏻‍🔬</h1>
+                <div class="card" onclick="expandCard(this)">
+                    <h3>📜 Mission Briefing</h3>
+                    <div class="loot-desc">
+                       Rooted in Chemistry, Branching in Benzene. Hi, Voyagers, welcome to the ChemzLandz 🧀 Melalui website ini, kalian akan dibantu untuk belajar dan menjelajahi informasi tentang <b>Benzena</b>. So, are you guys ready to start this exciting adventure?
+                    </div>
+                </div>
+                
+                <div class="card" onclick="expandCard(this)">
+                    <h3>📚 What Will We Learn? </h3>
+                 <div class="loot-desc">
+                        <p>Benzena dan turunannya, terutama <b style="color:var(--mario-yellow)">Anilin</b>  <b>C<sub>6</sub>H<sub>5</sub>NH<sub>2</sub></b>. Teman-teman, kalian tahu ga sih kalau ternyata Anilin itu keren banget lohh, dia punya peran besar di berbagai bidang, terutama sebagai pewarna 🎉 keren banget kan?? Warna yang kita lihat sampai hari ini, itu asal usulnya dari Anilin, OMG 😱 Jadi, apakah kalian tertarik buat cari tahu lebih lanjut?? </p>
+                        </div> </div>
+                
+                <div class="card" onclick="expandCard(this)">
+                    <h3>🐾 Mission Tutorial </h3>
+                 <div class="loot-desc">
+                        <p>Untuk melihat lebih banyak informasi tentang Benzena, yuk tekan tombol navigasi di sebelah kiri dan temukan berbagai rahasia tentang Benzena dan turunannya 🤫 Mulai dari level 1 dulu yaa, yuk kita mulai. Selamat menjelajah, Voyagers 🎒 </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="level1" class="tab-content" style="display:none;">
+                <h1>🍄 Level 1: The Beginning of Everything</h1>
+              
+                <div class="card" onclick="expandCard(this)">
+                    <h3>🛤️ Apa itu Alkana?</h3>
+                    <div class="loot-desc">Alkana adalah rantai karbon panjang yang hanya memiliki ikatan tunggal, misalnya ikatan karbon-karbon (C-C) dan ikatan karbon-hidrogen (C-H). Rantai alkana itu satu, simpel, lurus, jadi lebih mudah diingat.</div>
+                </div>
+              
+                <div class="card" onclick="expandCard(this)">
+                    <h3>🍩 Apa itu Benzena?</h3>
+                    <div class="loot-desc">
+                       Benzena        <b>C<sub>6</sub>H<sub>6</sub></b> adalah senyawa hidrokarbon aromatik paling sederhana, berbentuk cairan tak berwarna, mudah menguap, dan memiliki bau manis khas. Ditemukan pertama kali oleh Michael Faraday (1825), dan strukturnya disempurnakan oleh Kekulé (1865) yang terinspirasi dari mimpi ular menggigit ekornya!
+                    </div>
+                </div>
+                
+                   <div class="card" onclick="expandCard(this)">
+        <h3>🖼️ Struktur Benzena</h3>
+        <div class="loot-desc">
+            <img src="benzena.jpg" alt="Benzena Structure" style="width: 50%; border-radius: 8px; border: 2px solid #fff; margin-top: 10px; display: block;">
+            <p style="text-align: center; font-size: 10px; margin-top: 5px; color: #aaa;"> </p>
+        </div>
+    </div>
+    
+                <div class="card" onclick="expandCard(this)">
+                    <h3>🐍 Sejarah Singkat</h3>
+                    <div class="loot-desc">
+                       Terinspirasi dari mimpi ular? kok bisa? Pada tahun 1865, Kekulé tertidur di dekat perapian dan bermimpi melihat seekor ular yang bergerak memutar. Ketika diperhatikan lebih lama, ekor ular tersebut menyambung kembali ke kepala, dan begitu seterusnya, seolah menciptakan lingkaran yang tak terputus. Dan saat itu, struktur Benzena masih belum diketahui bentuknya, maka dari itu Kekulé berusaha mengaitkan pemikirannya dengan mimpinya yang janggal itu. Kemudian, ia berhasil memperkenalkan hipotesis yang menjelaskan bahwa struktur benzena berbentuk <b>heksagon</b> dengan enam atom karbon dimana masing-masing terikat dengan satu atom hidrogen. Menarik ya? dari mimpiin ular aja bisa jadi sejarah besar 😆
+                    </div>
+                </div>
+            </div>
+
+            <div id="level2" class="tab-content" style="display:none;">
+    <h1>📦 Level 2: Turunan Benzena</h1>
+    <p style="font-family: 'Press Start 2P', cursive; font-size: 10px; color: #aaa; margin-bottom: 20px; gap: 5px;">
+        KLIK SETIAP CARD UNTUK MELIHAT DETAILNYA
+    </p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="card" onclick="expandCard(this)">🧼 <b>1. Asam Benzena Sulfonat</b> <div class="loot-desc">, biasanya berbentuk kristal putih yang mudah larut dalam air. Asam Benzena Sulfonat ini punya sifat asam kuat dan hidrolfilik (suka air), karena itu umumnya digunakan untuk bahan baku deterjen ataupun pembersih.</div></div>
+        
+        <div class="card" onclick="expandCard(this)">🍱 <b>2. Asam Benzoat</b> <div class="loot-desc">Senyawa berbentuk kristal padat putih dan memiliki bau yang khas, secara alami dapat ditemukan di beberapa buah beri. Fungsi utamanya adalah sebagai pengawet makanan, sebab Asam Benzoat dapat menghambat pertumbuhan bakteri.</div></div>
+        
+        <div class="card" onclick="expandCard(this)">🍭 <b>3. Benzaldehid</b> <div class="loot-desc">Memiliki bentuk fisik cair, tidak berwarna, dan uniknya memiliki bau khas kacang almond. Dapat digunakan sebagai pemberi aroma (parfum, kosmetik, makanan, minuman).</div></div>
+        
+        <div class="card" onclick="expandCard(this)">❤️ <b>4. Fenol</b> <div class="loot-desc">Senyawa ini punya bau yang tajam dan khas, umumnya berbau seperti antiseptik. Seperti baunya, Fenol juga dapat difungsikan sebagai desinfektan dan cairan pembersih (karbol).</div></div>
+        
+        <div class="card" onclick="expandCard(this)">🧪 <b>5. Halobenzena</b> <div class="loot-desc">Turunan Benzena yang mengikat halogen (Fluorin, Klorin, Bromin, dan Iodin.) Umumnya dapat berfungsi sebagai pelaurut atau bahan baku pestisida DDT (pembasmi serangga).</div></div>
+        
+        <div class="card" onclick="expandCard(this)">📦 <b>6. Stirena</b> <div class="loot-desc">Berbentuk seperti minyak (cairan kental), tidak berwarna, dan memiliki bau manis yang tajam. Pemanfaatan utama senyawa ini adalah sebagai bahan baku pembuatan polimer (plastik dan styrofoam). </div></div>
+        
+        <div class="card" onclick="expandCard(this)">💣 <b>7. Toluena</b> <div class="loot-desc">Bentuk fisik Toluena adalah cairan bening yang tidak larut dalam air dan memiliki bau yang tajam seperti thinner (pengencer cat). Hebatnya, Toluena dapat dimanfaatkan sebagai bahan baku peledak (TNT, Trinitrotoluena).</div></div>
+        
+        <div class="card" onclick="expandCard(this)">🌸 <b>8. Nitrobenzena</b> <div class="loot-desc">Mirip seperti Benzaldehid, Nitrobenzena juga punya bau almond yang jauh lebih tajam. Bentuknya seperti minyak dan berwarna kuning pucat, serta memiliki kemampuan untuk melarutkan lilin. Karena itu, senyawa ini sering dimanfaatkan dalam pembuatan semir sepatu.</div></div>
+    </div>
+
+    <div class="card boss-blink" style="margin-top: 15px;" onclick="expandCard(this)">
+        <h3 style="color:var(--mario-yellow)">✨ MVP ITEM: 9. ANILIN</h3>
+        <div class="loot-desc">
+            <b>Main Character</b> kita hari ini, Anilin merupakan turunan Benzena dengan bentuk cairan berminyak yang tidak berwarna dan bersifat basa lemah. Fungsi utamanya adalah sebagai bahan baku untuk pewarna, namun Anilin juga memiliki fungsi di bidang lainnya, penasaran? Yuk cari tahu!
+        </div>
+    </div>
+
+    <div class="card" onclick="expandCard(this)" style="margin-top: 15px;">
+        <h3>❓ For Your Information</h3>
+        <div class="loot-desc">
+            <img src="9struktur.png" style="width: 100%; border-radius: 5px; display: block; margin-top: 5px;">
+        </div>
+    </div>
+</div>
+         
+         <div id="level3" class="tab-content" style="display:none;">
+                <h1>🎨 Level 3: The Identity of Color</h1>
+                <div class="card" onclick="expandCard(this)">
+                    <h3>🎀 Get to Know Anilin</h3>
+                    <div class="loot-desc">
+                        <b style="color:var(--mario-yellow)">Anilin</b>  <b>C<sub>6</sub>H<sub>5</sub>NH<sub>2</sub></b> adalah senyawa kimia organik dan merupakan salah satu turunan Benzena. Dalam wujud fisiknya, Anilin adalah cairan berminyak yang tidak berwarna. Meski fisiknya tak berwarna, Anilin bisa dikatakan sebagai <b>induk</b> dari pewarna. Sebab, hampir semua pewarna (tinta, tekstil, dll) yang kita lihat dan ketahui saat ini merupakan perkembangan dari penemuan Anilin pertama kali. ☠️ Namun, penggunaan Anilin harus dengan sangat hati-hati sebab sifatnya yang beracun jika terhirup atau menyentuh kulit 😰 
+                </div>
+                </div>
+           
+                <div class="card" onclick="expandCard(this)">
+                    <h3>🌈 Kenapa Bisa Berwarna?</h3>
+                    <div class="loot-desc">
+                   Tadi katanya bentuk fisik Anilin itu tidak berwarna, terus? Kenapa tiba-tiba dia punya warna? Karena ada interaksi antara <b style="color:var(--mario-yellow)">kromofor</b> dan cahaya. Kromofor menempel pada cincin Benzena milik Anilin dan bertanggung jawab untuk menghasilkan warna dengan cara memanipulasi elektron. Ketika ada kromofor, elektron akan lebih mudah <b style="color:var(--mario-yellow)">melompat-lompat</b> saat terkena cahaya sehingga dapat menyerap cahaya lebih banyak dan memantulkan warna.
+                   </div>
+                </div>
+                
+                <div class="card" onclick="expandCard(this)">
+        <h3>🧠 Manusia Melihat Warna</h3>
+        <div class="loot-desc">
+           How do humans see colors? Pertama, cahaya dipantulkan ke mata kita dan jatuh di retina, kemudian pantulan ditangkap oleh sel kerucut <b>(cone cells)</b>. Cone cells menangkap frekuensi warna lalu mengirim sinyal ke otak dengan saraf optik. Terakhir, otak menerjemahkan sinyal itu menjadi warna sejati yang kita lihat.
+        </div> </div>
+        
+                <div class="card" onclick="expandCard(this)">
+                    <h3>🔮 Jenis Pewarna</h3>
+                    <div class="loot-desc">
+                        <ol>
+
+<b><li>Dyes</li></b>
+Zat warna berbentuk cairan atau bubuk yang mudah larut. Contoh: pewarna tekstil, tinta pulpen
+<b><li>Pigments</li></b>
+Berbentuk bubuk yang tidak mudah larut, dan hanya dapat menempel di permukaan dengan bantuan perekat. Contoh: cat air, cat minyak, cat arkrilik, tinta printer
+<b><li>Alami</li></b>
+Berasal langsung dari alam. Contoh: Daun suji, kunyit, buah naga, bunga telang, kopi
+<b><li>Sintetis</li></b>
+Pewarna buatan yang dibuat melalui reaksi kimia. Contoh: Tartazine, indigotin, fast green
+<b><li>Food Grade</li></b>
+Pewarna untuk makanan atau minuman yang telah diuji dan aman
+<b><li>Reaktif</li></b>
+Umumnya digunakan untuk mewarnai kain (kapas atau sutra) karena memiliki ketahanan luntur yang baik
+<b><li>Kosmetik</li></b>
+Pigmen yang digunakan khusus untuk produk kecantikan dan aman di kulit
+                     </ol>
+                        </div>
+            </div>
+            
+          </div>   <div id="level4" class="tab-content" style="display:none;">
+                <h1>🌈 Level 4: Color Spectrum Scale</h1>
+                
+                <div class="spectrum-container">
+                    <div style="display:flex; justify-content: space-between; font-family: 'Press Start 2P'; font-size: 7px; margin-bottom: 8px;">
+                        <span style="writing-mode: horizontal-rl;">ULTRAVIOLET</span>
+                        <span 
+                        <span style="writing-mode: horiontal-rl;">INFRARED</span>
+                    </div>
+
+                    <div class="spectrum-bar"></div>
+
+                    <div class="spectrum-ruler">
+                        <div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div>
+                        <div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div>
+                        <div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div>
+                    </div>
+
+                    <div class="spectrum-labels">
+                        <span>400nm</span>
+                        <span>500nm</span>
+                        <span>600nm</span>
+                        <span>700nm</span>
+                    </div>
+                </div>
+
+                <div class="card" onclick="expandCard(this)">
+                    <h3>📏 Skala 400-700</h3>
+                    <div class="loot-desc">
+                      Jika kalian penasaran, angka tersebut menunjukkan rentang panjang gelombang (nanometer) suatu cahaya yang masih bisa dilihat oleh mata telanjang manusia atau <b>visible light</b>. Mata manusia hanya mampu melihat warna yang berada di rentang ini, di bawah 400nm ada UV (Ultraviolet), dan di atas 700nm ada Infrared.
+                    </div>
+                    </div>
+                    
+                    <div class="card" onclick="expandCard(this)">
+                    <h3>🟪 Ultraviolet</h3>
+                    <div class="loot-desc">
+                        Ultraviolet (UV) adalah cahaya yang berada dari matahari dan termasuk ke dalam warna yang <b>tak kasat mata</b> sebab berada di luar spektrum visible light (atau spektrum cahaya yang bisa ditangkap oleh mata manusia). Ultra (melampaui) dan violet (ungu) menandakan bahwa warna ultraviolet memiliki frekuensi yang <b>lebih tinggi</b> dari warna ungu terakhir yang bisa dilihat oleh mata telanjang manusia. Meski begitu, beberapa hewan seperti lebah 🐝 dan burung 🕊️ dapat melihat warna UV.
+                    </div>
+                    </div>
+                    
+                    <div class="card" onclick="expandCard(this)">
+                    <h3>🟥 Infrared</h3>
+                    <div class="loot-desc">
+                        Berbeda dengan ultraviolet yang berada di atas spektrum warna, Infrared adalah kebalikannya. Infra (bawah) dan red (merah) menandakan bahwa Infrared termasuk ke dalam spektrum warna yang berada <b>di bawah warna merah terakhir yang bisa dilihat oleh manusia</b>. Meski tak kasat mata, penggunaan Infrared dapat memberikan manfaat bagi kehidupan manusia, salah satunya adalah sebagai <b>kamera term</b>, penggunaan Infrared pada kamera termal dapat membantu kita dalam melakukan pengukuran suhu 🌡️
+                    </div>
+                    </div>
+            
+             <div style="text-align: center; margin: 25px 0;">
+    <p style="font-family: 'Press Start 2P'; font-size: 8px; color: var(--mario-yellow); margin-bottom: 12px;">
+        KEEP GOING! LET'S GO!
+    </p>
+    
+        <div class="mario-track">
+        <img src="mariojalan.gif" class="mario-walker" alt="Mario">
+    </div>
+    </div>
+            </div>
+            
+           <div id="level5" class="tab-content" style="display:none;">
+    <h1>🧪 Level 5: Mixing Lab</h1>
+      <div class="sub-tab-container">
+        <button class="sub-tab-btn active" onclick="showSubTab('lab-section', this)">MIXER LAB</button>
+        <button class="sub-tab-btn" onclick="showSubTab('theory-section', this)">COLOR THEORY</button>
+    </div>
+    <div id="lab-section">
+    <div class="lab-container">
+        <div class="color-slots">
+            <button class="btn-mix red" onclick="selectColor('#ff0000', 'RED')">RED</button>
+            <button class="btn-mix green" onclick="selectColor('#00ff00', 'GREEN')">GREEN</button>
+            <button class="btn-mix blue" onclick="selectColor('#0000ff', 'BLUE')">BLUE</button>
+            <button class="btn-mix yellow" onclick="selectColor('#ffff00', 'YELLOW')">YELLOW</button>
+            <button class="btn-mix orange" onclick="selectColor('#ffa500', 'ORANGE')">ORANGE</button>
+            <button class="btn-mix purple" onclick="selectColor('#800080', 'PURPLE')">PURPLE</button>
+            <button class="btn-mix pink" onclick="selectColor('#ffc0cb', 'PINK')">PINK</button>
+            <button class="btn-mix white" onclick="selectColor('#ffffff', 'WHITE')">WHITE</button>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 20px; align-items: center; margin-bottom: 5px;">
+            <div id="slot1" class="slot">?</div>
+            <span style="font-family: 'Press Start 2P'; font-size: 20px; color:#fff;">+</span>
+            <div id="slot2" class="slot">?</div>
+        </div>
+
+        <div id="resultBox" class="mixer-result">RESULT</div>
+        <button class="nav-btn" onclick="resetMixer()">♻️ RESET LAB</button>
+    </div>
+    </div>
+    
+<div id="theory-section" class="theory-content" style="display:none;">
+        <div style="margin-bottom: 15px;"onclick="expandCard(this)">
+                    <h4>🌊 WARNA PRIMER</h4>
+                    <p>Warna primer adalah warna dasar (utama) yang tidak dapat dihasilkan melalui pencampuran warna lain. Tiga warna primer utama yaitu merah, kuning, dan biru. Warna primer merupakan fondasi untuk menciptakan warna sekunder dan tersier melalui kombinasi warna tertentu. </p>
+                    <span class="color-badge" style="background:#ff0000; color:#fff">RED</span>
+                    <span class="color-badge" style="background:#ffff00">YELLOW</span>
+                    <span class="color-badge" style="background:#0000ff; color:#fff;">BLUE</span>
+        </div>
+        
+         <div onclick="expandCard(this)">
+        <h4>🫧 WARNA TERSIER</h4>
+        <p>Hasil campuran satu warna primer dengan satu warna sekunder yang kemudian menghasilkan warna-warna yang lebih kompleks.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+            <span class="color-badge" style="background:#ff5349;">RED-ORANGE</span>
+            <span class="color-badge" style="background:#FFB343;">YELLOW-ORANGE</span>
+            <span class="color-badge" style="background:#9ACD32;">YELLOW-GREEN</span>
+            <span class="color-badge" style="background:#00ffff;">BLUE-GREEN</span>
+            <span class="color-badge" style="background:#4b0082; color:#fff;">BLUE-PURPLE</span>
+            <span class="color-badge" style="background:#660033; color:#fff;">RED-PURPLE</span>
+        </div>
+        
+        <div class="card boss-blink" style="margin-top:10px; background:#444; padding: 8px 12px; min-height: auto;" onclick="expandCard(this)">
+    <h3 style="font-size:12px; margin: 0px">💡 Tip</h3> 
+    <div class="loot-desc">
+        Campurkan warna di Mixing Lab untuk menemukan warna-warna di atas! 
+    </div>
+    
+</div> </div> </div> </div> <div id="level6" class="tab-content" style="display:none;">
+    <h1>👀 Level 6: Theory of Colours</h1>
+    <div class="card" onclick="expandCard(this)">
+        <h3>🔍 Rahasia Warna</h3>
+        <div class="loot-desc">
+            Warna bukan cuman sekedar hiasan, mereka punya nyawa sendiri. Bahkan, dalam dunia psikologi, ada yang namanya <b>psikologi warna</b>, dimana setiap warna yang berbeda dapat memengaruhi perasaan (emosi) dan tindakan kita. Sebab itu warna juga sering dikaitkan dengan kepribadian seseorang, katanya, setiap orang punya aura yang warnanya berbeda-beda, dan setiap warna menggambarkan kepribadian si orang itu (misal, kalau auranya warna merah, katanya itu menandakan bahwa orang tersebut punya semangat yang ga pernah padam dan keberanian yang tinggi (berani ambil resiko)). Seru banget ga sih?? 🤓
+        </div> </div>
+        
+        <div class="card" onclick="expandCard(this)">
+        <h3>📺 RGB</h3>
+        <div class="loot-desc">
+            RGB atau (Red, Green, Blue) adalah jenis warna yang memancarkan cahaya langsung sehingga dapat dilihat oleh mata manusia. Karena memiliki sifat berbasis cahaya, penggunaan warna RGB umum ditemukan pada perangkat digital seperti layar handphone, monitor, atau televisi.
+        </div> </div>
+        
+        <div class="card" onclick="expandCard(this)">
+        <h3>🖌️ RYB</h3>
+        <div class="loot-desc">
+            RYB atau (Red, Yellow, Blue) adalah jenis warna yang bekerja dengan menyerap cahaya dan hanya memantulkan satu warna ke mata kita. Penggunaan RYB seringkali ditemukan pada bidang seni rupa (terutama seni lukis), dan desain interior.
+        </div> </div>
+        
+        <div class="card" onclick="expandCard(this)">
+        <h3>🖨️ CMY(K)</h3>
+        <div class="loot-desc">
+            CMYK atau (Cyan, Magenta, Yellow, Key (hitam)) merupakan jenis warna yang cara kerjanya mirip seperti RYB, sama sama menyerap cahaya, warna yang dipantulkan ke mata kita adalah sisa warna yang tidak diserap. CMYK seringkali dipergunakan di bidang industri, sebagai mesin cetak (printer), majalah, atau kemasan produk. ⭐❓Ini juga merupakan alasan mengapa saat kita mencetak sesuatu, terkadang warna setelah di cetak dengan warna sebelum di cetak (masih di media digital seperti handphone atau komputer) terlihat berbeda. Sebab, CMYK (media cetak) yang sifatnya <b>menyerap</b> memiliki batasan untuk memantulkan cahaya, berbeda dengan RGB (media digital) yang sifatnya <b>memancarkan</b> cahaya.
+        </div> </div>
+        
+    </div>
+    
+    <div id="level7" class="tab-content" style="display:none;">
+    <h1>💎 Level 7: Pigments & Treasures</h1>
+    <p style="font-family: 'Press Start 2P', cursive; font-size: 8px; color: #aaa; margin-bottom: 20px;">
+        PENGGUNAAN & MANFAAT ANILINA DALAM KEHIDUPAN SEHARI-HARI
+    </p>
+
+    <div class="card boss-blink" style="border-color: #6fb293;" onclick="expandCard(this)">
+        <h3>👕 Industri Tekstil: Legendary Dye</h3>
+        <div class="loot-desc">
+            Anilin berperan penting sebagai <b>bahan pewarna utama</b>, salah satunya untuk Indigo sintetis (pewarna yang biasa dipakai untuk jeans👖). Tanpa ini, ga cuman jeans, mungkin pakaian yang kamu pakai sekarang ga akan ada warnanya, BAMM, ga kebayang kalo orang-orang di dunia ini pake baju tanpa warna 😨😰 Inilah salah satu fungsi Anilin yang paling sering kita jumpai.
+            <br>
+            <span class="color-badge" style="background:#000080; color:white;">NAVY BLUE</span>
+            <span class="color-badge" style="background:#4b0082; color:white;">DEEP PURPLE</span>
+        </div>
+    </div>
+
+    <div class="card" style="border-color: #f78c96;" onclick="expandCard(this)">
+        <h3>🛞 Industri Karet: Rubber Accelerator</h3>
+        <div class="loot-desc">
+            Fungsi utama Anilin dalam industri karet adalah sebagai <b>akselerator</b> dalam proses vulkanisasi 🔥 Maksudnya, Anilin membantu proses akselerasi <b>(mempercepat)</b> pemasakan karet mentah tanpa harus memakan waktu berjam-jam ⏰ dan membuatnya jadi lebih kuat (tidak rapuh, lebih elastis dan tahan panas).
+        </div>
+    </div>
+
+    <div class="card" style="border-color: #ff5252;" onclick="expandCard(this)">
+        <h3>👩🏻‍⚕️ Bidang Kesehatan: Healer's Potion</h3>
+        <div class="loot-desc">
+            Meskipun beracun, ternyata Anilin punya peran sebagai <b>bahan baku obat</b> seperti Parasetamol 💊 Lebih kerennya lagi, Obat Sulfa <b>(Antibiotik pertama)</b> merupakan turunan langsung dari Anilin. Dari zat beracun, bisa jadi penyelamat bagi manusia 🩹
+        </div>
+    </div>
+
+    <div class="card" style="border-color: #43B047;" onclick="expandCard(this)">
+        <h3>🌳 Bidang Pertanian: Nature Protector</h3>
+        <div class="loot-desc">
+            Anilin dapat diolah menjadi <b>senyawa aktif</b> dalam Pestisida dan Herbisida sehingga aman digunakan dan tidak merusak tanaman 🌿 Yang kemudian dapat bermanfaat untuk <b>melindungi tanaman</b> dari gangguan gulma atau hama 🦠
+        </div>
+    </div>
+
+    <div class="card" style="border-color: var(--mario-yellow);" onclick="expandCard(this)">
+        <h3>🛸 Bidang Aerospace: Rocket Fuel</h3>
+        <div class="loot-desc">
+            Dahulu, Anilin digunakan sebagai komponen <b>bahan bakar</b> roket 🚀 Anilin memiliki sifat <b>Hipergolik</b>, yang jika dipasangkan dengan bahan kimia lain dapat menjadi bahan bakar yang efektif 💪🏻 Funfactnya, WAC Corporal, roket Amerika pertama yang mencapai orbit, menggunakan campuran Anilin sebagai bahan bakar 🧑🏼‍🚀
+        </div>
+    </div>
+
+    <div class="lab-container" style="margin-top: 30px; border-style: dashed; background: #111;">
+        <p style="font-family: 'Press Start 2P', cursive; font-size: 9px; color: var(--mario-yellow);">✨ MISSION UPDATE ✨</p>
+        <p style="font-size: 13px; color: #fff; line-height: 1.5;">
+            Gimana? tenryata banyak banget pemanfaatan <b>Anilin</b> di bidang lain yang nggak terduga ya? Sekarang, kamu telah mengetahui bahwa <b>Anilin</b> tidak hanya berfungsi dan dimanfaatkan sebagai pewarna saja.</p>
+    </div>
+
+    <div class="card" style="margin-top: 30px; border: 4px double var(--mario-yellow); background: #000;" onclick="expandCard(this)">
+        <h3 style="color: var(--mario-yellow); text-align: center;">🏆 FINAL: THE END OF ADVENTURE</h3>
+        <div class="loot-desc" style="color: #fff;">
+            <p>Petualangan kita di <b>ChemzLandz</b> akhirnya telah selesai! Apa saja yang sudah kamu dapatkan disini?:</p>
+            <ul style="list-style: none; padding: 0;">
+                <li>📍 <b>Benzena:</b> Akar dari seluruh pembahasan kita, induk dari berbagai macam senyawa turunannya</li>
+                <li>📍 <b>Turunan Benzena:</b> Benzena itu punya banyak turunan, dan tiap turunan punya manfaatnya sendiri-sendiri</li>
+                <li>📍 <b>Anilin:</b> Superhero kita di berbagai bidang, mulai dari pewarna, kesehatan, aerosoace, dan lainnya. Senyawa kimia yang unexpectedly punya banyak kontribusi untuk kemajuan dunia dan udah kita rasain sendiri manfaatnya</li>
+            </ul>
+            <p style="text-align: center; font-family: 'Press Start 2P'; font-size: 8px; color: var(--mario-green);">YOU ARE NOW A CHEMISTRY ACE!</p>
+        </div>
+    </div>
+</div>
+                        
+       <div id="level8" class="tab-content" style="display:none;">
+    <h1>⭐ Bonus Stage: Fun Facts!</h1>
+    
+    <div class="lab-container" style="margin-bottom: 25px; border: 4px dashed var(--mario-yellow); background: #111;">
+        <p style="font-family: 'Press Start 2P', cursive; font-size: 9px; color: var(--mario-yellow);">🎁 BONUS STAGE UNTUK KAMU!</p>
+        <p style="font-size: 12px; color: #fff;">
+            Satu langkah lagi menuju end game. Tenang, kamu ga akan dihadapkan dengan pembelajaran berat kok, stage ini berisi informasi menarik yang mungkin belum pernah kamu ketahui sebelumnya. <i>Enjoy the funfact!</i>
+        </p>
+    </div>
+
+    <div class="card-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+        
+        <div class="card" style="border-color: #f987c5;" onclick="expandCard(this)">
+            <h3>1. Warna Pink Itu Ilusi? 🦄</h3>
+            <div class="loot-desc"><b>Percaya ngga percaya, warna pink emang sebenernya <u>nggak pernah ada di spektrum cahaya</u>. Warna pink ada saat cahaya merah dan cahaya ungu/biru muncul secara bersamaan. Jadi, ketika otak kita kebingungan menerjemahkan warna tersebut, otak kemudian memutuskan untuk menerjemahkannya menjadi warna baru dan muncullah ilusi warna pink.</b></div>
+        </div>
+        
+        <div class="card" style="border-color: #7daaba;" onclick="expandCard(this)">
+            <h3>2. Warna Paling Gelap Sedunia 🕳️</h3>
+            <div class="loot-desc"> <b>Namanya Vantablack (singkatan dari <i>Vertically Aligned Nano Tube Array</i>). Hebatnya, warna ini dapat menyerap hingga 99.96% cahaya. Jadi, kalau kamu ngeliat benda yang dicat pakai Vantablack, objek itu akan kehilangan dimensinya, dengan kata lain kita bahkan ga bisa ngeliat bayangannya.</b></div>
+        </div>
+
+        <div class="card" style="border-color: #a9629f;" onclick="expandCard(this)">
+            <h3>3. Warna Para Bangsawan 👑</h3>
+            <div class="loot-desc">
+             <b>Zaman dulu, warna ungu itu susah banget di dapetin. Kenapa? Karena harus di ekstrak dari <u>Siput Laut Murex</u> yang proses nya itu susah dan memakan banyak waktu. Sudah rumit, hasil ekstrak nya juga sedikit, untuk menghasilkan 1 gram pewarna ungu (dulu disebut <i>Tyrian Purple</i>) butuh sekitar 9-10 ribu ekor siput. Hal ini menyebabkan warna ungu di kala itu lebih mahal dari emas, sehingga yang mampu membeli dan menggunakannya hanya para penguasa (raja / kaisar) sekaligus sebagai simbol kekuasaan mereka, makanya sampai ada julukan warna bangsawan. Bahkan, dulu ada hukum yang melarang rakyat biasa memakai warna ungu, katanya sampai bisa dihukum mati, serem banget. Tapi tenang aja, berkat temuan pewarna ungu sintetis (<i>mauveine, aniline purple</i>) oleh Sir William Henry Perkin, sekarang warna ungu bisa dipakai oleh siapapun.</b>
+            </div>
+        </div>
+
+        <div class="card" style="border-color: #ffb142;" onclick="expandCard(this)">
+            <h3>4. Kenapa Wortel Warnanya Oranye? 🥕</h3>
+            <div class="loot-desc">
+               <b> Lagi-lagi kimia, warna oranye yang ada pada wortel berasal dari senyawa kimia <u>Beta-karoten</u>. Eits, jangan salah, dinamakan <u>Beta-karoten</u> sebab terinspirasi dari nama tanamannya (<i>carrot</i>) yang sudah lebih dulu ditemukan. Uniknya, kalau kebanyakan mengonsumsi wortel, telapak tangan atau kaki kita bisa berubah jadi warna oranye, biasa disebut <u>Karotenemia.</u></b>
+            </div>
+        </div>
+
+        <div class="card" style="border-color: #ff5252;" onclick="expandCard(this)">
+            <h3>5. Merah Bikin Laper? 🍟</h3>
+            <div class="loot-desc">
+               <b>Yupp, ga salah baca kok, teori ini sering disebut sebagai "The Ketchup and Mustard Theory". Tadi kan kita sempet bahas sekilas soal psikologi warna, nah, warna merah secara psikologis memiliki pengaruh yang kuat terhadap <u>peningkatan detak jantung dan nafsu makan</u>. Itulah mengapa banyak logo restoran cepat saji memakai warna merah.</b>
+            </div>
+        </div>
+
+        <div class="card" style="border-color: #3f51b5;" onclick="expandCard(this)">
+            <h3>6. Rahasia Biru Jeans 👖</h3>
+            <div class="loot-desc"><b>Pewarna biru yang sering dipakai untuk jeans berasal dari senyawa <i>Indigo</i>. Secara kimiawi, <i>Indigo</i> merupakan salah satu pewarna tertua yang dulunya diambil dari tanaman <i>Indigogera Tinctoria</i>. Yang unik, molekul warna ini tidak meresap ke dalam serat kain, tapi cuman menempel di luar. Karena itulah makin lama warna jeans bisa terlihat semakin pudar.</b></div>
+        </div>
+        
+        <div class="card" style="border-color: #77d9dc;" onclick="expandCard(this)">
+            <h3>7. Hewan Berdarah Biru? 🦀</h3>
+            <div class="loot-desc"><b>Kalau darah manusia punya <i>Hemoglobin</i> dan besi (<i>Fe</i>) yang dapat memantulkan warna merah saat mengikat oksigen, darah kepiting tapal kuda berwarna <u>biru</u> karena mengandung <i>Hemosianin</i> dan tembaga (<i>Cu</i>).</b></div>
+        </div>
+
+        <div class="card" style="border-color: #F3E5AB;" onclick="expandCard(this)">
+            <h3>8. Susu Pernah Berwarna Kuning? 🥛</h3>
+            <div class="loot-desc"><b>Kalian tahu ga sih kalau dunia kita ini pernah menghadapi sejarah kelam seperti "Era Pemalsuan Pangan" pada abad ke-18? Era itu, banyak produsen susu tidak bertanggung jawab yang memanipulasi produksi susu, saking maraknya, sampai ada kasus yang disebut "Swill Milk Scandal". Mereka menambahkan senyawa kimia <i>lead chromate</i> atau timbal kromat ke dalam susu sehingga warnanya menguning dan terlihat lebih kental (berlemak), padahal, itu racun. Jahat banget ya?</b></div>
+        </div>
+
+        <div class="card" style="border-color: #f38b60;" onclick="expandCard(this)">
+            <h3>9. Buah Atau Warna? 🍊</h3>
+            <div class="loot-desc"><b>Dahulu, orang Eropa menyebut warna oranye sebagai "merah-kuning" atau <i>geoluhread</i>. Kemudian, pada abad ke-16, setelah buah jeruk (<i>orange</i>) masuk ke Eropa, mereka akhirnya punya nama baru untuk warna tersebut, yaitu oranye.</b></div>
+        </div>
+
+        <div class="card" style="border-color: #f4acb7;" onclick="expandCard(this)">
+            <h3>10. Warna Kembang Api 🎆</h3>
+            <div class="loot-desc"><b>Hampir semua isi dan bahan untuk kembang api itu dari unsur kimia. Di dalam kembang api, ada mesiu (campuran <i>sulfur, arang, dan kalium nitrat</i>) yang kalau terbakar bisa melepaskan gas dengan cepat. Kemudian, gas tersebut akan mendorong warna kembang api melambung ke langit. Gong nya lagi, warna-warna yang dihasilkan kembang api ini dihasilkan dari unsur kimia yang terbakar!! <i>Strontium</i> menghasilkan warna merah, <i>Kalsium</i> oranye, <i>Natrium</i> kuning, <i>Barium</i> hijau, dan <i>Magnesium</i> putih.</b>
+    </div>
+        </div>
+    
+        <div class="card" style="border-color: #a9be77;" onclick="expandCard(this)">
+            <h3>11. Glow in the Dark? 🔋</h3>
+            <div class="loot-desc">
+                <b>Ini sama aja kayak konsep "baterai" alami. Pas ada cahaya, zat kimia bernama <i>Fosfor</i> atau <i>Stronsium Aluminat</i> bakal nyerep energi cahaya itu buat "nge-charge". Pas gaada cahaya, energinya keluar pelan-pelan dalam bentuk cahaya berwarna hijau.</b>
+            </div>
+        </div>
+
+        <div class="card" style="border-color: #f5f5f5;" onclick="expandCard(this)">
+            <h3>12. Putih si Social Butterfly? ⚪</h3>
+            <div class="loot-desc">
+                <b>Sebenernya warna putih itu bukan warna tunggal. Putih adalah gabungan dari <b>SEMUA</b> warna pelangi yang bergabung jadi satu. Saat semuanya masuk ke mata bersamaan, otak kita menerjemahkannya sebagai warna putih.</b>
+            </div>
+        </div>
+
+        <div class="card" style="border-color: #f0be39;" onclick="expandCard(this)">
+            <h3>13. Warna Paling Cepat Dilihat ⚡</h3>
+            <div class="loot-desc">
+                <b>Kalian percaya ga sih kalau mata manusia itu paling cepat menangkap warna kuning dibanding warna lain? Kuning punya tingkat pantulan cahaya sangat tinggi, jadi sekalipun di dalam kondisi redup, warna kuning tetap menonjol. Sebab itulah bus sekolah, rambu peringatan, taksi, garis jalan, serta rompi keselamatan umumnya berwarna kuning agar lebih mudah dilihat.</b>
+            </div>
+        </div>
+              
+        <div class="card" style="border-color: #6fb293;" onclick="expandCard(this)">
+            <h3>14. Kenapa Daun Itu Hijau? 🍃</h3>
+            <div class="loot-desc">
+                <b>Karena, daun punya zat hijau yang namanya <i>Klorofil</i>, yang berperan penting untuk fotosintesis tanaman. Dia suka menyerap cahaya merah dan biru untuk mengubah air dan karbondioksida menjadi energi, tapi di sisi lain memantulkan cahaya hijau kembali ke mata kita.</b>
+            </div>
+        </div>
+        
+        <div class="card" style="border-color: #8c9dbb;" onclick="expandCard(this)">
+            <h3>15. Manusia dengan Mata Biru? 👁️</h3>
+            <div class="loot-desc">
+                <b>Bukan berarti mereka memiliki pigmen biru di matanya. Manusia yang memiliki warna mata biru tidak hanya dipengaruhi oleh mutasi gen, tetapi juga disebabkan oleh kurangnya <i>melanin</i> (pigmen gelap). Dari segi fisika, hal ini terjadi sebab adanya <u>Efek Tyndall</u>, di mana cahaya biru dipantulkan keluar oleh serat mata. Kedua hal ini memiliki hubungan, <i>Melanin</i>  sendiri berfungsi menyerap cahaya, yang membuat mata kita terlihat lebih gelap, jadi, saat kita kekurangan <i>Melanin</i>, maka cahaya yang diserap akan semakin sedikit dan membuat mata kita terlihat lebih terang.</b>
+            </div>
+        </div>
+    </div>
+
+    <div class="level-clear" id="clearBanner" style="margin-top: 40px; padding: 30px; border: 8px double var(--mario-green); background: #000; text-align: center;">
+        <h1 style="color: var(--mario-green); font-family: 'Press Start 2P'; font-size: 24px; margin-bottom: 20px;">👑 YOU WIN! 👑</h1>
+        <p style="font-family: 'Press Start 2P'; font-size: 10px; color: #fff; line-height: 1.8;">
+            CONGRATULATIONS!<br>
+            Kamu telah menyelesaikan seluruh petualangan di ChemzLandz sampai akhir. 
+            Semoga informasi yang kamu dapat disini bisa berguna ya!
+        </p>
+        <div style="margin-top: 20px; font-size: 30px;">🏆✨⭐</div>
+    </div>
+</div>
+
+        </main>
+    </div>
+
+    <script>
+        function openTab(tabId, btn, progress) {
+            // Update Progress Bar
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            // Switch Tabs
+            let tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+
+            // Active Button
+            let btns = document.querySelectorAll('.nav-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Show banner if last level
+            if(tabId === 'level4') {
+                setTimeout(() => {
+                    document.getElementById('clearBanner').style.display = 'block';
+                }, 500);
+            }
+        }
+
+        function expandCard(card) {
+            // Toggle class for animation
+            card.classList.toggle('expanded');
+            
+            // Effect: Subtle vibration on click
+            card.style.transform = 'scale(0.98)';
+            setTimeout(() => card.style.transform = 'scale(1)', 100);
+        }
+      
+    </script>
+</body>
+          </html>
